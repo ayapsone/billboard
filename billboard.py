@@ -158,7 +158,8 @@ def main(argv):
    if args.detailed_dataset_name == None:
        args.detailed_dataset_name = args.dataset_name
 
-   project_billing_info =billing.CloudBillingClient().get_project_billing_info(name="projects/ayyappan-playground")
+   project_id_temp="projects/{}".format(args.project_id)
+   project_billing_info =billing.CloudBillingClient().get_project_billing_info(name=project_id_temp) 
    billing_account_name= project_billing_info.billing_account_name.split("/")[1]
    print("Note: Script will use defaults if parameters are not passed for -bbs -bbd","\n")
    print("Project billing account="+billing_account_name,"\n")
