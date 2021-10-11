@@ -3,7 +3,7 @@ This code implements billboard dataset for standard and detailed billing
 
 
 
-# Environment set-up
+## Environment set-up
 
 You can set-up the right python environment as follows:
 
@@ -21,13 +21,11 @@ This step includes the following:
 - Install dependencies
 
 
-# Setup
-
-# help
+## help
 ```
 python billboard.py -h
 ```
-# Create billboard dataset
+## Create billboard dataset
  -se  standard billing export dataset
  -bb billboard dataset to be created
 
@@ -35,7 +33,7 @@ python billboard.py -h
 python billboard.py -pr <project id> -se <standard billing ds> -bb <billboard_ds>
 ```
 
-# clean up
+## clean up
 ```
 python billboard.py -pr <project id> -se <standard billing ds> -bb <billboard_ds> -clean yes
 
