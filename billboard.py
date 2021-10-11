@@ -21,6 +21,11 @@ import argparse, sys
 
 bq_client = bigquery.Client()
 
+report_base_url="https://datastudio.google.com/reporting/create?c.reportId=2e2ea000-8f68-40e2-8847-b80f05069b6e&r.reportName=MyBillboard"
+
+standard_view_url="&ds.ds39.connector=bigQuery&ds.ds39.projectId={}&ds.ds39.type=TABLE&ds.ds39.datasetId={}&ds.ds39.tableId={}"
+detailed_view_url="&ds.ds39.connector=bigQuery&ds.ds39.projectId={}&ds.ds39.type=TABLE&ds.ds39.datasetId={}&ds.ds39.tableId={}"
+output_url=""
 
 # This function checks if billboard dataset already exists or not
 # so that we are not recreating it
@@ -68,6 +73,8 @@ def create_dataset(args):
 # Creates the view for the Billboard
 def create_billboard_view(args,isStandard):
 
+    global output_url
+
     if isStandard == True:
         source_id="{}.{}.{}".format(args.project_id,args.dataset_name,args.standard_table)
         view_id="{}.{}.{}".format(args.project_id,args.bb_dataset_name,args.bb_standard)
@@ -98,6 +105,11 @@ def create_billboard_view(args,isStandard):
     job = bq_view_client.query(sql)  # API request.
     job.result()  # Waits for the query to finish.
 
+    if isStandard == True:
+        output_url=report_base_url+standard_view_url.format(args.project_id, args.bb_dataset_name,args.bb_standard)
+    else:
+        output_url=output_url+detailed_view_url.format(args.project_id, args.bb_dataset_name,args.bb_detailed)
+ 
     print(
         'Created view "{}.{}.{}".'.format(
             job.destination.project,
@@ -105,6 +117,14 @@ def create_billboard_view(args,isStandard):
             job.destination.table_id,
         )
     )
+
+def generate_datastudio_url(args):
+
+    print("\nUrls:")
+    print("To view dataset, please click https://console.cloud.google.com/bigquery","\n")
+
+    
+    print("To launch datastudio report, please click ",output_url,"\n")
 
 def remove_billboard_dataset(args):
     try:
@@ -144,15 +164,14 @@ def main(argv):
    args.detailed_table = "gcp_billing_export_resource_v1_"+billing_account_name.replace('-','_')
    
    if args.clean == None:
-       create_dataset(args)
-       create_billboard_view(args,True)
-       create_billboard_view(args,False)
+       create_dataset(args)              #to create dataset
+       create_billboard_view(args,True)  #to create standard view
+       create_billboard_view(args,False) #to create detailed view
+       generate_datastudio_url(args)     #to create urls
    else:
-       remove_billboard_dataset(args)
+       remove_billboard_dataset(args)    #to cleanup
 
-   print("Please check https://console.cloud.google.com/bigquery","\n")
-
+   
 #main entry point
 if __name__ == "__main__":
     main(sys.argv[1:])
-   
