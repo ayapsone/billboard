@@ -17,6 +17,7 @@ from google.cloud import billing
 from google.api_core.exceptions import BadRequest, AlreadyExists, NotFound
 from google.cloud.exceptions import NotFound
 import argparse, sys
+from colorama import Fore, Back, Style
 
 
 bq_client = bigquery.Client()
@@ -111,20 +112,21 @@ def create_billboard_view(args,isStandard):
         output_url=output_url+detailed_view_url.format(args.project_id, args.bb_dataset_name,args.bb_detailed)
  
     print(
-        'Created view "{}.{}.{}".'.format(
+        'Created view {}{}.{}.{}'.format(Back.GREEN,
             job.destination.project,
             job.destination.dataset_id,
-            job.destination.table_id,
+            job.destination.table_id
         )
     )
+    print(Style.RESET_ALL)
 
 def generate_datastudio_url(args):
+    print("To view dataset, please click "+Back.GREEN +"https://console.cloud.google.com/bigquery","\n")
 
-    print("\nUrls:")
-    print("To view dataset, please click https://console.cloud.google.com/bigquery","\n")
+    print(Style.RESET_ALL)
 
-    
-    print("To launch datastudio report, please click ",output_url,"\n")
+    print("To launch datastudio report, please click " +Back.GREEN + output_url +"\n")
+    print(Style.RESET_ALL)
 
 def remove_billboard_dataset(args):
     try:
@@ -175,3 +177,4 @@ def main(argv):
 #main entry point
 if __name__ == "__main__":
     main(sys.argv[1:])
+   
