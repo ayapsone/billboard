@@ -20,17 +20,20 @@ This step includes the following:
 - Launch local env
 - Install dependencies
 
-To get command options
+
+## To see options
 ```
 python billboard.py -h
 ```
-
- To create billboard dataset
+## Create billboard dataset
+ -se  standard billing export dataset
+ 
+ -bb billboard dataset to be created
 ```
 python billboard.py -pr <project id> -se <standard billing ds> -bb <billboard_ds>
 ```
 
-To clean up
+## clean up
 ```
 python billboard.py -pr <project id> -se <standard billing ds> -bb <billboard_ds> -clean yes
 
