@@ -25,7 +25,7 @@ bq_client = bigquery.Client()
 report_base_url="https://datastudio.google.com/reporting/create?c.reportId=2e2ea000-8f68-40e2-8847-b80f05069b6e&r.reportName=MyBillboard"
 
 standard_view_url="&ds.ds39.connector=bigQuery&ds.ds39.projectId={}&ds.ds39.type=TABLE&ds.ds39.datasetId={}&ds.ds39.tableId={}"
-detailed_view_url="&ds.ds39.connector=bigQuery&ds.ds39.projectId={}&ds.ds39.type=TABLE&ds.ds39.datasetId={}&ds.ds39.tableId={}"
+detailed_view_url="&ds.ds93.connector=bigQuery&ds.ds93.projectId={}&ds.ds93.type=TABLE&ds.ds93.datasetId={}&ds.ds93.tableId={}"
 output_url=""
 
 # This function checks if billboard dataset already exists or not
@@ -46,10 +46,10 @@ def check_billboard_dataset_exists(dataset_id):
 def create_dataset(args):
 
     #To be created dataset for billboard
-    dataset_id = "{}.{}".format(args.project_id,args.bb_dataset_name)
+    dataset_id = "{}.{}".format(args.PROJECT_ID,args.BILLBOARD_DATASET_NAME_TO_BE_CREATED)
     
     #Exported billing dataset
-    source_id = "{}.{}.{}".format(args.project_id,args.dataset_name,args.standard_table)
+    source_id = "{}.{}.{}".format(args.PROJECT_ID,args.STANDARD_BILLING_EXPORT_DATASET_NAME,args.standard_table)
    
     #check if billboard dataset exists
     if check_billboard_dataset_exists(dataset_id) == True:
@@ -77,11 +77,11 @@ def create_billboard_view(args,isStandard):
     global output_url
 
     if isStandard == True:
-        source_id="{}.{}.{}".format(args.project_id,args.dataset_name,args.standard_table)
-        view_id="{}.{}.{}".format(args.project_id,args.bb_dataset_name,args.bb_standard)
+        source_id="{}.{}.{}".format(args.PROJECT_ID,args.STANDARD_BILLING_EXPORT_DATASET_NAME,args.standard_table)
+        view_id="{}.{}.{}".format(args.PROJECT_ID,args.BILLBOARD_DATASET_NAME_TO_BE_CREATED,args.bb_standard)
     else:
-        source_id="{}.{}.{}".format(args.project_id,args.detailed_dataset_name,args.detailed_table)
-        view_id="{}.{}.{}".format(args.project_id,args.bb_dataset_name,args.bb_detailed)
+        source_id="{}.{}.{}".format(args.PROJECT_ID,args.DETAILED_BILLING_EXPORT_DATASET_NAME,args.detailed_table)
+        view_id="{}.{}.{}".format(args.PROJECT_ID,args.BILLBOARD_DATASET_NAME_TO_BE_CREATED,args.bb_detailed)
   
     #Check resource detailed export is present
     try:      
@@ -101,15 +101,15 @@ def create_billboard_view(args,isStandard):
         view_id,source_id
     )
 
-    bq_view_client = bigquery.Client(project=args.project_id) #not sure why this need project_id
+    bq_view_client = bigquery.Client(project=args.PROJECT_ID) #not sure why this need project_id
 
     job = bq_view_client.query(sql)  # API request.
     job.result()  # Waits for the query to finish.
 
     if isStandard == True:
-        output_url=report_base_url+standard_view_url.format(args.project_id, args.bb_dataset_name,args.bb_standard)
+        output_url=report_base_url+standard_view_url.format(args.PROJECT_ID, args.BILLBOARD_DATASET_NAME_TO_BE_CREATED,args.bb_standard)
     else:
-        output_url=output_url+detailed_view_url.format(args.project_id, args.bb_dataset_name,args.bb_detailed)
+        output_url=output_url+detailed_view_url.format(args.PROJECT_ID, args.BILLBOARD_DATASET_NAME_TO_BE_CREATED,args.bb_detailed)
  
     print(
         'Created view {}{}.{}.{}'.format(Back.GREEN,
@@ -130,7 +130,7 @@ def generate_datastudio_url(args):
 
 def remove_billboard_dataset(args):
     try:
-        dataset_id = "{}.{}".format(args.project_id,args.bb_dataset_name)
+        dataset_id = "{}.{}".format(args.PROJECT_ID,args.BILLBOARD_DATASET_NAME_TO_BE_CREATED)
         bq_client.delete_dataset(dataset_id,delete_contents=True, not_found_ok=True)
         print("Dataset {} deleted.".format(dataset_id))
         return True
@@ -143,28 +143,29 @@ def remove_billboard_dataset(args):
 def main(argv):
 
    parser = argparse.ArgumentParser(description='Billing Export information')
-   parser.add_argument('-pr', dest='project_id', type=str, help='Project Id',required=True)
-   parser.add_argument('-se', dest='dataset_name', type=str, help='Usage export dataset',required=True)
-   parser.add_argument('-de', dest='detailed_dataset_name', type=str, help='Detailed Usage cost export dataset(if it\'s different than standard)')
+   #parser.add_argument('-pr', dest='PROJECT_ID', type=str, help='Project Id',required=True)
+   parser.add_argument('-pr', dest='PROJECT_ID', type=str,required=True)
+   parser.add_argument('-se', dest='STANDARD_BILLING_EXPORT_DATASET_NAME', type=str,required=True)
+   parser.add_argument('-de', dest='DETAILED_BILLING_EXPORT_DATASET_NAME', type=str)
    
-   parser.add_argument('-bb', dest='bb_dataset_name', type=str, help='Billboard Dataset to be created',required=True)
-   parser.add_argument('-bbs', dest='bb_standard', type=str, help='Billboard Standard View to be created',default="billboard")
-   parser.add_argument('-bbd', dest='bb_detailed', type=str, help='Billboard Detailed View to be created',default="billboard_detail")
-
-   parser.add_argument('-clean', dest='clean', type=str, help='To Remove Billboard Dataset, provide "yes"')
+   parser.add_argument('-bb', dest='BILLBOARD_DATASET_NAME_TO_BE_CREATED', type=str,required=True)
+   
+   parser.add_argument('-clean', dest='clean', type=str, help='Only when you need cleanup, provide "yes"')
    
 
    args = parser.parse_args()
-   if args.detailed_dataset_name == None:
-       args.detailed_dataset_name = args.dataset_name
+   if args.DETAILED_BILLING_EXPORT_DATASET_NAME == None:
+       args.DETAILED_BILLING_EXPORT_DATASET_NAME = args.STANDARD_BILLING_EXPORT_DATASET_NAME
 
-   project_id_temp="projects/{}".format(args.project_id)
+   project_id_temp="projects/{}".format(args.PROJECT_ID)
    project_billing_info =billing.CloudBillingClient().get_project_billing_info(name=project_id_temp) 
    billing_account_name= project_billing_info.billing_account_name.split("/")[1]
-   print("Note: Script will use defaults if parameters are not passed for -bbs -bbd","\n")
+   
    print("Project billing account="+billing_account_name,"\n")
    args.standard_table = "gcp_billing_export_v1_"+billing_account_name.replace('-','_')
    args.detailed_table = "gcp_billing_export_resource_v1_"+billing_account_name.replace('-','_')
+   args.bb_standard = "billboard"
+   args.bb_detailed = "billboard_detail"
    
    if args.clean == None:
        create_dataset(args)              #to create dataset
