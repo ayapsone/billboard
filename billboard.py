@@ -12,6 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+#https://googleapis.dev/python/google-api-core/latest/exceptions.html#
+#https://cloud.google.com/bigquery/docs/samples/bigquery-create-view
+
 from google.cloud import bigquery
 from google.cloud import billing
 from google.api_core.exceptions import BadRequest, AlreadyExists, NotFound,PermissionDenied
