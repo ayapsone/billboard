@@ -14,7 +14,7 @@
 
 from google.cloud import bigquery
 from google.cloud import billing
-from google.api_core.exceptions import BadRequest, AlreadyExists, NotFound
+from google.api_core.exceptions import BadRequest, AlreadyExists, NotFound,PermissionDenied
 from google.cloud.exceptions import NotFound
 import argparse, sys
 from colorama import Fore, Back, Style
@@ -129,22 +129,19 @@ def generate_datastudio_url(args):
     print(Style.RESET_ALL)
 
 def remove_billboard_dataset(args):
-    try:
-        dataset_id = "{}.{}".format(args.PROJECT_ID,args.BILLBOARD_DATASET_NAME_TO_BE_CREATED)
-        bq_client.delete_dataset(dataset_id,delete_contents=True, not_found_ok=True)
-        print("Dataset {} deleted.".format(dataset_id))
-        return True
-    except NotFound:
-        print("Dataset {} is not found.".format(dataset_id))
-        return False    
-    print("Cleaned")
+    standard_view_id="{}.{}.{}".format(args.PROJECT_ID,args.BILLBOARD_DATASET_NAME_TO_BE_CREATED,args.bb_standard)
+    bq_client.delete_table(standard_view_id, not_found_ok=True)
+    print("Billboard view {} deleted.".format(standard_view_id))
+    detailed_view_id="{}.{}.{}".format(args.PROJECT_ID,args.BILLBOARD_DATASET_NAME_TO_BE_CREATED,args.bb_detailed)
+    bq_client.delete_table(detailed_view_id,not_found_ok=True)
+    print("Billboard view {} deleted.".format(detailed_view_id))
+    return True
 
 
 def main(argv):
 
    parser = argparse.ArgumentParser(description='Billing Export information')
-   #parser.add_argument('-pr', dest='PROJECT_ID', type=str, help='Project Id',required=True)
-   parser.add_argument('-pr', dest='PROJECT_ID', type=str,required=True)
+   parser.add_argument('-pr', dest='PROJECT_ID', type=str,help='Project Id', required=True)
    parser.add_argument('-se', dest='STANDARD_BILLING_EXPORT_DATASET_NAME', type=str,required=True)
    parser.add_argument('-de', dest='DETAILED_BILLING_EXPORT_DATASET_NAME', type=str)
    
@@ -158,7 +155,12 @@ def main(argv):
        args.DETAILED_BILLING_EXPORT_DATASET_NAME = args.STANDARD_BILLING_EXPORT_DATASET_NAME
 
    project_id_temp="projects/{}".format(args.PROJECT_ID)
-   project_billing_info =billing.CloudBillingClient().get_project_billing_info(name=project_id_temp) 
+   try:
+        project_billing_info =billing.CloudBillingClient().get_project_billing_info(name=project_id_temp) 
+   except PermissionDenied:
+        print("Permission Denied so you do not have project level permission or provided wrong project id, please check.")
+        return False
+   
    billing_account_name= project_billing_info.billing_account_name.split("/")[1]
    
    print("Project billing account="+billing_account_name,"\n")
